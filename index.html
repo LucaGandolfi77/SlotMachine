@@ -172,6 +172,20 @@
             opacity: 0.5;
             filter: brightness(0.7);
             object-fit: contain;
+            transition: all 0.3s ease;
+        }
+
+        .symbol-highlight {
+            opacity: 1;
+            filter: brightness(1.2);
+            transform: scale(1.1);
+            animation: symbolPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes symbolPulse {
+            0% { transform: scale(1.1); filter: brightness(1.2); }
+            50% { transform: scale(1.2); filter: brightness(1.4); }
+            100% { transform: scale(1.1); filter: brightness(1.2); }
         }
 
         .bet-button {
@@ -825,14 +839,32 @@
         }
 
         function highlightWinningLines(winningLines) {
+            // Reset all highlights
             slots.forEach(slot => {
                 slot.classList.remove('winning');
             });
+            document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
+                .forEach(img => img.classList.remove('symbol-highlight'));
+
+            // Set of winning symbols
+            const winningSymbols = new Set();
 
             winningLines.forEach(line => {
+                // Add winning animations to slots
                 line.positions.forEach(pos => {
                     slots[pos].classList.add('winning');
                 });
+                
+                // Add symbol to winning set
+                winningSymbols.add(line.symbol);
+            });
+
+            // Highlight corresponding symbols in the row
+            winningSymbols.forEach(symbol => {
+                const symbolImg = document.querySelector(`.${symbol}-image`);
+                if (symbolImg) {
+                    symbolImg.classList.add('symbol-highlight');
+                }
             });
         }
 
