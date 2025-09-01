@@ -146,6 +146,7 @@
         .action-buttons {
             display: flex;
             gap: 10px;
+            margin-bottom: 15px;
         }
 
         .bet-controls {
@@ -155,6 +156,21 @@
             background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 10px;
+            margin-top: 0;
+        }
+
+        .clover-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .clover-image {
+            width: 40px;
+            height: 40px;
+            opacity: 0.5;
+            filter: brightness(0.7);
         }
 
         .bet-button {
@@ -357,10 +373,12 @@
         </div>
 
         <div class="controls">
-            <div class="bet-controls">
-                <button class="bet-button" type="button">-</button>
-                <span class="bet-amount"><span id="bet-display">1.00</span> €</span>
-                <button class="bet-button" type="button">+</button>
+            <div class="clover-row">
+                <img src="images/clover.png" alt="Clover" class="clover-image">
+                <img src="images/clover.png" alt="Clover" class="clover-image">
+                <img src="images/clover.png" alt="Clover" class="clover-image">
+                <img src="images/clover.png" alt="Clover" class="clover-image">
+                <img src="images/clover.png" alt="Clover" class="clover-image">
             </div>
             
             <div class="action-buttons">
@@ -370,6 +388,12 @@
                 <button class="auto-button" id="auto-button" type="button">
                     AUTO 🔄
                 </button>
+            </div>
+
+            <div class="bet-controls">
+                <button class="bet-button" type="button">-</button>
+                <span class="bet-amount"><span id="bet-display">1.00</span> €</span>
+                <button class="bet-button" type="button">+</button>
             </div>
         </div>
 
