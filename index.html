@@ -308,10 +308,28 @@
             transform-origin: center;
         }
 
+        .foundators-message {
+            background: rgba(255, 140, 0, 0.6);
+            animation: foundatorsPulse 2s ease-in-out infinite;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 0 0 15px #FF8C00;
+            color: #FFFFFF;
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.7);
+            transform-origin: center;
+            border: 2px solid #FFA500;
+        }
+
         @keyframes bonusPulse {
             0% { transform: scale(1); background: rgba(255, 215, 0, 0.3); }
             50% { transform: scale(1.1); background: rgba(255, 215, 0, 0.5); }
             100% { transform: scale(1); background: rgba(255, 215, 0, 0.3); }
+        }
+
+        @keyframes foundatorsPulse {
+            0% { transform: scale(1); background: rgba(255, 140, 0, 0.6); }
+            50% { transform: scale(1.15); background: rgba(255, 140, 0, 0.8); text-shadow: 0 0 25px #FF8C00; }
+            100% { transform: scale(1); background: rgba(255, 140, 0, 0.6); }
         }
 
         .lose-message {
@@ -525,9 +543,9 @@
                 5: { multiplier: 10, freeSpins: 0 }
             },
             'orange': { 
-                3: { multiplier: 3, freeSpins: 0 },
-                4: { multiplier: 6, freeSpins: 0 },
-                5: { multiplier: 10, freeSpins: 0 }
+                3: { multiplier: 3, freeSpins: 10 },
+                4: { multiplier: 6, freeSpins: 10 },
+                5: { multiplier: 10, freeSpins: 10 }
             },
             'grape': { 
                 3: { multiplier: 3, freeSpins: 0 },
@@ -857,6 +875,37 @@
                 }
             }
 
+            // Check for PADRI FONDATORI combination (orange, grape, lemon in any order)
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col <= 2; col++) {
+                    const threeSymbols = [
+                        grid[row][col],
+                        grid[row][col + 1],
+                        grid[row][col + 2]
+                    ];
+                    
+                    const foundatorsSymbols = new Set(['orange', 'grape', 'lemon']);
+                    const currentSymbols = new Set(threeSymbols);
+                    
+                    if (threeSymbols.every(symbol => foundatorsSymbols.has(symbol)) &&
+                        currentSymbols.size === 3) { // All three must be different
+                        const positions = [
+                            row * 5 + col,
+                            row * 5 + (col + 1),
+                            row * 5 + (col + 2)
+                        ];
+                        winningLines.push({
+                            type: 'foundators',
+                            positions: positions,
+                            symbol: 'foundators'
+                        });
+                        // Add special bonus for PADRI FONDATORI (77x multiplier)
+                        totalWin += currentBet * 77;
+                        bonusFreeSpins += 7; // 7 free spins for luck
+                    }
+                }
+            }
+
             return { winningLines, totalWin, bonusFreeSpins };
         }
 
@@ -973,17 +1022,24 @@
                 balance += result.totalWin;
                 freeSpins += result.bonusFreeSpins;
                 
-                let message = `🎉 VINCITA! +${result.totalWin.toFixed(2)}€`;
-                if (result.bonusFreeSpins > 0) {
-                    message += ` + ${result.bonusFreeSpins} Free Spins! 🎁`;
+                // Check for PADRI FONDATORI special win
+                const foundatorsWin = result.winningLines.find(line => line.type === 'foundators');
+                if (foundatorsWin) {
+                    const message = `🏆 PADRI FONDATORI! +${(currentBet * 77).toFixed(2)}€ + 7 Free Spins! 🎰`;
+                    updateMessage(message, 'foundators-message');
+                } else {
+                    let message = `🎉 VINCITA! +${result.totalWin.toFixed(2)}€`;
+                    if (result.bonusFreeSpins > 0) {
+                        message += ` + ${result.bonusFreeSpins} Free Spins! 🎁`;
+                    }
+                    
+                    const bestWin = result.winningLines.reduce((best, line) => 
+                        line.count > best.count ? line : best
+                    );
+                    message += ` (${bestWin.count} ${symbolToEmoji[bestWin.symbol]})`;
+                    
+                    updateMessage(message, 'win-message');
                 }
-                
-                const bestWin = result.winningLines.reduce((best, line) => 
-                    line.count > best.count ? line : best
-                );
-                message += ` (${bestWin.count} ${symbolToEmoji[bestWin.symbol]})`;
-                
-                updateMessage(message, 'win-message');
                 
                 updateBalance();
                 updateFreeSpins();
