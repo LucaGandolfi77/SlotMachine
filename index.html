@@ -362,6 +362,73 @@
             margin: 5px 0;
         }
 
+        /* Stili per il popup */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: linear-gradient(135deg, #4a00e0, #8e2de2);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            animation: popupAppear 0.5s ease-out;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes popupAppear {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .popup-title {
+            font-size: 2em;
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .popup-message {
+            font-size: 1.2em;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .popup-close {
+            background: #ffd700;
+            color: #4a00e0;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-close:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
         @media (max-width: 320px) {
             .container {
                 padding: 10px;
@@ -378,6 +445,18 @@
             .slot-grid {
                 padding: 8px;
                 gap: 2px;
+            }
+
+            .popup-content {
+                padding: 20px;
+            }
+
+            .popup-title {
+                font-size: 1.5em;
+            }
+
+            .popup-message {
+                font-size: 1em;
             }
         }
     </style>
@@ -483,6 +562,16 @@
                 <span>3-5 altri simboli</span>
                 <span>3x - 30x</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Popup per il completamento della clover-row -->
+    <div class="popup-overlay" id="completionPopup">
+        <div class="popup-content">
+            <h2 class="popup-title">🌟 BAR COMPLETATI! 🌟</h2>
+            <p class="popup-message">Hai completato la raccolta di tutti i bar, ora inizia il GIRO DEI BAR!
+Hai vinto un bonus speciale di 50x la tua puntata!</p>
+            <button class="popup-close" id="closePopup">INIZIA IL GIRO! 🎉</button>
         </div>
     </div>
 
@@ -948,8 +1037,23 @@
                 balance += bonusAmount;
                 updateBalance();
 
-                // Show BONUS message with the amount
-                updateMessage(`🌟 MEGA BONUS! +${bonusAmount.toFixed(2)}€ 🌟`, 'bonus-message');
+                // Show popup and bonus message
+                const popup = document.getElementById('completionPopup');
+                popup.style.display = 'flex';
+                updateMessage(`🌟 GIRO DEI BAR! +${bonusAmount.toFixed(2)}€ 🌟`, 'bonus-message');
+
+                // Stop auto-spin if active
+                if (autoSpinInterval) {
+                    clearInterval(autoSpinInterval);
+                    autoSpinInterval = null;
+                    autoButton.textContent = 'AUTO 🔄';
+                    spinButton.disabled = false;
+                }
+
+                // Handle popup close button
+                document.getElementById('closePopup').onclick = function() {
+                    popup.style.display = 'none';
+                };
 
                 // Reset lit symbols after timeout
                 setTimeout(() => {
