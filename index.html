@@ -308,6 +308,37 @@
             transform-origin: center;
         }
 
+        .tour-mode {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tour-mode::before {
+            content: '🚲';
+            position: absolute;
+            font-size: 24px;
+            animation: cycleMove 10s linear infinite;
+            opacity: 0.3;
+        }
+
+        .tour-mode::after {
+            content: '🚴';
+            position: absolute;
+            font-size: 24px;
+            animation: cycleMove 8s linear infinite;
+            animation-delay: -4s;
+            opacity: 0.3;
+        }
+
+        @keyframes cycleMove {
+            0% {
+                transform: translate(-100%, random() * 100%);
+            }
+            100% {
+                transform: translate(200%, random() * 100%);
+            }
+        }
+
         .foundators-message {
             background: rgba(255, 140, 0, 0.6);
             animation: foundatorsPulse 2s ease-in-out infinite;
@@ -411,6 +442,30 @@
             font-size: 1.2em;
             color: white;
             margin-bottom: 25px;
+        }
+
+        .number-scroll {
+            font-size: 3em;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'Digital', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 1.2em;
+        }
+
+        .number-scroll .number {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+        }
+
+        .number-scroll .number.visible {
+            opacity: 1;
         }
 
         .popup-close {
@@ -568,9 +623,10 @@
     <!-- Popup per il completamento della clover-row -->
     <div class="popup-overlay" id="completionPopup">
         <div class="popup-content">
-            <h2 class="popup-title">🌟 BAR COMPLETATI! 🌟</h2>
-            <p class="popup-message">Hai completato la raccolta di tutti i bar, ora inizia il GIRO DEI BAR!
-Hai vinto un bonus speciale di 50x la tua puntata!</p>
+            <h2 class="popup-title">🌟 TOUR DEI BAR! 🌟</h2>
+            <p class="popup-message">Preparati per il tour dei bar della città!</p>
+            <div class="number-scroll" id="numberScroll"></div>
+            <p class="popup-message">giri bonus in TOUR MODE! 🚲</p>
             <button class="popup-close" id="closePopup">INIZIA IL GIRO! 🎉</button>
         </div>
     </div>
@@ -582,10 +638,24 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
         let freeSpins = 0;
         let spinning = false;
         let autoSpinInterval = null;
-        let litSymbols = new Set(); // Keep track of lit symbols
+        let litSymbols = new Set();
+        let tourModeActive = false;
+        let tourSpinsRemaining = 0;
 
-        const BONUS_MESSAGE_TIMEOUT = 3000; // 3 seconds for bonus message
+        const BONUS_MESSAGE_TIMEOUT = 3000;
+        
+        // Funzione per generare un numero casuale tra min e max
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
+        // Funzione per attivare la TOUR MODE
+        function activateTourMode(spins) {
+            tourModeActive = true;
+            tourSpinsRemaining = spins;
+            document.querySelector('.slot-grid').classList.add('tour-mode');
+            updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
+        }
         const symbols = ['cherry', 'lemon', 'orange', 'grape', 'star', 'bell', 'diamond', 'clover', 'target'];
         
         const symbolToEmoji = {
@@ -776,6 +846,14 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
 
         function getRandomSymbol() {
             return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+
+        // Funzione per attivare la TOUR MODE
+        function activateTourMode(spins) {
+            tourModeActive = true;
+            tourSpinsRemaining = spins;
+            document.querySelector('.slot-grid').classList.add('tour-mode');
+            updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
         }
         
         function toggleAutoSpin() {
@@ -1008,12 +1086,9 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
             const winningSymbols = new Set();
 
             winningLines.forEach(line => {
-                // Add winning animations to slots
                 line.positions.forEach(pos => {
                     slots[pos].classList.add('winning');
                 });
-                
-                // Add symbol to winning set
                 winningSymbols.add(line.symbol);
             });
 
@@ -1032,15 +1107,57 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
 
             // If all symbols are lit, show the BONUS message
             if (allSymbolsLit) {
-                // Give extra bonus
-                const bonusAmount = currentBet * 50; // 50x bonus
+                const finalTourSpins = getRandomInt(10, 50);
+                const bonusAmount = currentBet * 50; // Bonus fisso di 50x
                 balance += bonusAmount;
                 updateBalance();
 
-                // Show popup and bonus message
+                // Show popup and start number animation
                 const popup = document.getElementById('completionPopup');
+                const numberScroll = document.getElementById('numberScroll');
                 popup.style.display = 'flex';
                 updateMessage(`🌟 GIRO DEI BAR! +${bonusAmount.toFixed(2)}€ 🌟`, 'bonus-message');
+
+                // Funzione per creare l'effetto di scrolling dei numeri
+                function animateNumbers() {
+                    let duration = 2000;
+                    let steps = 30;
+                    let interval = duration / steps;
+                    let count = 0;
+
+                    numberScroll.innerHTML = '';
+                    
+                    const animation = setInterval(() => {
+                        count++;
+                        let randomNum = getRandomInt(10, 50);
+                        
+                        // Rimuovi il numero precedente
+                        const oldNumber = numberScroll.querySelector('.visible');
+                        if (oldNumber) {
+                            oldNumber.classList.remove('visible');
+                            setTimeout(() => oldNumber.remove(), 100);
+                        }
+
+                        // Aggiungi il nuovo numero
+                        const numberDiv = document.createElement('div');
+                        numberDiv.className = 'number';
+                        numberDiv.textContent = count >= steps ? finalTourSpins : randomNum;
+                        numberScroll.appendChild(numberDiv);
+                        
+                        // Forza un reflow
+                        numberDiv.offsetHeight;
+                        
+                        // Rendi visibile il numero
+                        numberDiv.classList.add('visible');
+
+                        if (count >= steps) {
+                            clearInterval(animation);
+                        }
+                    }, interval);
+                }
+
+                // Avvia l'animazione dei numeri
+                animateNumbers();
 
                 // Stop auto-spin if active
                 if (autoSpinInterval) {
@@ -1053,6 +1170,7 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
                 // Handle popup close button
                 document.getElementById('closePopup').onclick = function() {
                     popup.style.display = 'none';
+                    activateTourMode(finalTourSpins);
                 };
 
                 // Reset lit symbols after timeout
@@ -1060,7 +1178,6 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
                     litSymbols.clear();
                     document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
                         .forEach(img => img.classList.remove('symbol-highlight'));
-                    // Reset message after clearing symbols
                     updateMessage('Simboli resettati! Raccoglili di nuovo!', '');
                 }, BONUS_MESSAGE_TIMEOUT);
             }
@@ -1068,6 +1185,16 @@ Hai vinto un bonus speciale di 50x la tua puntata!</p>
 
         async function spin() {
             if (spinning) return;
+            
+            if (tourModeActive) {
+                tourSpinsRemaining--;
+                updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
+                if (tourSpinsRemaining === 0) {
+                    tourModeActive = false;
+                    document.querySelector('.slot-grid').classList.remove('tour-mode');
+                    updateMessage('TOUR MODE completato! 🏁', 'win-message');
+                }
+            }
             
             if (balance < currentBet && freeSpins === 0) {
                 updateMessage('Saldo insufficiente!', 'lose-message');
