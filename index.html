@@ -308,10 +308,16 @@
             transform-origin: center;
         }
 
+        /* Stile per l'intera app in TOUR MODE */
+        body.tour-mode {
+            background: linear-gradient(135deg, #000428, #004e92) !important;
+            transition: background 0.5s ease;
+        }
+
         .tour-mode {
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, #000428, #004e92) !important;
+            background: rgba(0, 4, 40, 0.6) !important;
             transition: background 0.5s ease;
         }
 
@@ -320,32 +326,63 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .tour-mode::before {
-            content: '🚲';
+        .tour-mode::before,
+        .tour-mode::after,
+        .tour-mode .bike-emoji {
             position: absolute;
             font-size: 24px;
-            animation: cycleMove 10s linear infinite;
             opacity: 0.5;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+        }
+
+        .tour-mode::before {
+            content: '�';
+            animation: cycleMove 10s linear infinite;
         }
 
         .tour-mode::after {
             content: '🚴';
-            position: absolute;
-            font-size: 24px;
             animation: cycleMove 8s linear infinite;
             animation-delay: -4s;
-            opacity: 0.5;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .tour-mode .bike-emoji:nth-child(3n) {
+            content: '🚵';
+            animation: cycleMoveDiagonal 12s linear infinite;
+        }
+
+        .tour-mode .bike-emoji:nth-child(3n + 1) {
+            content: '🚴‍♂️';
+            animation: cycleMoveReverse 15s linear infinite;
+        }
+
+        .tour-mode .bike-emoji:nth-child(3n + 2) {
+            content: '🚴‍♀️';
+            animation: cycleMoveCurved 20s linear infinite;
         }
 
         @keyframes cycleMove {
-            0% {
-                transform: translate(-100%, 50%);
-            }
-            100% {
-                transform: translate(200%, 50%);
-            }
+            0% { transform: translate(-100%, 50%); }
+            100% { transform: translate(200%, 50%); }
+        }
+
+        @keyframes cycleMoveReverse {
+            0% { transform: translate(200%, 30%) scaleX(-1); }
+            100% { transform: translate(-100%, 30%) scaleX(-1); }
+        }
+
+        @keyframes cycleMoveDiagonal {
+            0% { transform: translate(-100%, -100%) rotate(45deg); }
+            100% { transform: translate(200%, 200%) rotate(45deg); }
+        }
+
+        @keyframes cycleMoveCurved {
+            0% { transform: translate(-100%, 0%) rotate(0deg); }
+            25% { transform: translate(0%, 25%) rotate(15deg); }
+            50% { transform: translate(100%, 50%) rotate(0deg); }
+            75% { transform: translate(150%, 25%) rotate(-15deg); }
+            100% { transform: translate(200%, 0%) rotate(0deg); }
         }
 
         .tour-mode .slot.winning {
@@ -663,13 +700,6 @@
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        // Funzione per attivare la TOUR MODE
-        function activateTourMode(spins) {
-            tourModeActive = true;
-            tourSpinsRemaining = spins;
-            document.querySelector('.slot-grid').classList.add('tour-mode');
-            updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
-        }
         const symbols = ['cherry', 'lemon', 'orange', 'grape', 'star', 'bell', 'diamond', 'clover', 'target'];
         
         const symbolToEmoji = {
@@ -866,8 +896,20 @@
         function activateTourMode(spins) {
             tourModeActive = true;
             tourSpinsRemaining = spins;
+            document.body.classList.add('tour-mode');
             document.querySelector('.slot-grid').classList.add('tour-mode');
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
+            
+            // Aggiungi biciclette random
+            const slotGrid = document.querySelector('.slot-grid');
+            for (let i = 0; i < 6; i++) {
+                const bike = document.createElement('div');
+                bike.className = 'bike-emoji';
+                bike.style.left = Math.random() * 100 + '%';
+                bike.style.top = Math.random() * 100 + '%';
+                bike.style.animationDelay = -(Math.random() * 10) + 's';
+                slotGrid.appendChild(bike);
+            }
         }
         
         function toggleAutoSpin() {
