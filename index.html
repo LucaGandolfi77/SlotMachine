@@ -311,6 +311,13 @@
         .tour-mode {
             position: relative;
             overflow: hidden;
+            background: linear-gradient(135deg, #000428, #004e92) !important;
+            transition: background 0.5s ease;
+        }
+
+        .tour-mode .slot {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .tour-mode::before {
@@ -318,7 +325,8 @@
             position: absolute;
             font-size: 24px;
             animation: cycleMove 10s linear infinite;
-            opacity: 0.3;
+            opacity: 0.5;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         .tour-mode::after {
@@ -327,16 +335,22 @@
             font-size: 24px;
             animation: cycleMove 8s linear infinite;
             animation-delay: -4s;
-            opacity: 0.3;
+            opacity: 0.5;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         @keyframes cycleMove {
             0% {
-                transform: translate(-100%, random() * 100%);
+                transform: translate(-100%, 50%);
             }
             100% {
-                transform: translate(200%, random() * 100%);
+                transform: translate(200%, 50%);
             }
+        }
+
+        .tour-mode .slot.winning {
+            background: #FFD700 !important;
+            border: 2px solid #FFA500;
         }
 
         .foundators-message {
