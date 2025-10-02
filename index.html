@@ -173,6 +173,16 @@
             filter: brightness(0.7);
             object-fit: contain;
             transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 5px;
+        }
+
+        .clover-image:hover, .bell-image:hover, .cherry-image:hover, .star-image:hover, .target-image:hover {
+            transform: scale(1.1);
+            opacity: 0.8;
+            filter: brightness(1);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .symbol-highlight {
@@ -396,7 +406,7 @@
             opacity: 0;
             pointer-events: none;
             z-index: 1000;
-            animation: bikeFade 8s linear forwards;
+            animation: bikeFade 4s linear forwards;
         }
 
         @keyframes bikeFade {
@@ -954,12 +964,12 @@
                 });
             }
             
-            // Crea biciclette iniziali
-            for (let i = 0; i < 8; i++) {
-                setTimeout(() => createRandomBike(), i * 1000);
+            // Crea biciclette iniziali (più numerose)
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => createRandomBike(), i * 500); // Ridotto il delay tra le biciclette
             }
             
-            // Continua a creare nuove biciclette ogni tanto
+            // Continua a creare nuove biciclette più frequentemente
             const bikeInterval = setInterval(() => {
                 if (!tourModeActive) {
                     clearInterval(bikeInterval);
@@ -967,7 +977,9 @@
                     return;
                 }
                 createRandomBike();
-            }, 2000);
+                // Crea una seconda bicicletta con un leggero ritardo
+                setTimeout(() => createRandomBike(), 300);
+            }, 1000); // Ridotto l'intervallo tra le ondate di biciclette
         }
         
         function toggleAutoSpin() {
@@ -1423,6 +1435,96 @@
                 slot.innerHTML = `<img src="images/${randomSymbolName}.png" alt="${randomSymbolName}">`;
             });
         }
+
+        function toggleSymbol(symbol) {
+            const symbolImg = document.querySelector(`.${symbol}-image`);
+            if (symbolImg) {
+                if (symbolImg.classList.contains('symbol-highlight')) {
+                    symbolImg.classList.remove('symbol-highlight');
+                    litSymbols.delete(symbol);
+                } else {
+                    symbolImg.classList.add('symbol-highlight');
+                    litSymbols.add(symbol);
+                }
+
+                // Controlla se tutti i simboli sono attivati
+                const symbolsInRow = ['clover', 'bell', 'cherry', 'star', 'target'];
+                const allSymbolsLit = symbolsInRow.every(s => litSymbols.has(s));
+
+                if (allSymbolsLit) {
+                    const finalTourSpins = getRandomInt(10, 50);
+                    const bonusAmount = currentBet * 50;
+                    balance += bonusAmount;
+                    updateBalance();
+
+                    const popup = document.getElementById('completionPopup');
+                    const numberScroll = document.getElementById('numberScroll');
+                    popup.style.display = 'flex';
+                    updateMessage(`🌟 GIRO DEI BAR! +${bonusAmount.toFixed(2)}€ 🌟`, 'bonus-message');
+
+                    function animateNumbers() {
+                        let duration = 2000;
+                        let steps = 30;
+                        let interval = duration / steps;
+                        let count = 0;
+
+                        numberScroll.innerHTML = '';
+                        
+                        const animation = setInterval(() => {
+                            count++;
+                            let randomNum = getRandomInt(10, 50);
+                            
+                            const oldNumber = numberScroll.querySelector('.visible');
+                            if (oldNumber) {
+                                oldNumber.classList.remove('visible');
+                                setTimeout(() => oldNumber.remove(), 100);
+                            }
+
+                            const numberDiv = document.createElement('div');
+                            numberDiv.className = 'number';
+                            numberDiv.textContent = count >= steps ? finalTourSpins : randomNum;
+                            numberScroll.appendChild(numberDiv);
+                            
+                            numberDiv.offsetHeight;
+                            
+                            numberDiv.classList.add('visible');
+
+                            if (count >= steps) {
+                                clearInterval(animation);
+                            }
+                        }, interval);
+                    }
+
+                    animateNumbers();
+
+                    if (autoSpinInterval) {
+                        clearInterval(autoSpinInterval);
+                        autoSpinInterval = null;
+                        autoButton.textContent = 'AUTO 🔄';
+                        spinButton.disabled = false;
+                    }
+
+                    document.getElementById('closePopup').onclick = function() {
+                        popup.style.display = 'none';
+                        activateTourMode(finalTourSpins);
+                    };
+
+                    setTimeout(() => {
+                        litSymbols.clear();
+                        document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
+                            .forEach(img => img.classList.remove('symbol-highlight'));
+                        updateMessage('Simboli resettati! Raccoglili di nuovo!', '');
+                    }, BONUS_MESSAGE_TIMEOUT);
+                }
+            }
+        }
+
+        // Aggiungi event listener per i click sui simboli
+        document.querySelector('.clover-image').addEventListener('click', () => toggleSymbol('clover'));
+        document.querySelector('.bell-image').addEventListener('click', () => toggleSymbol('bell'));
+        document.querySelector('.cherry-image').addEventListener('click', () => toggleSymbol('cherry'));
+        document.querySelector('.star-image').addEventListener('click', () => toggleSymbol('star'));
+        document.querySelector('.target-image').addEventListener('click', () => toggleSymbol('target'));
         
         updateBalance();
         updateBetDisplay();
