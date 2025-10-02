@@ -337,7 +337,7 @@
         }
 
         .tour-mode::before {
-            content: '�';
+            content: '🚴';
             animation: cycleMove 10s linear infinite;
         }
 
@@ -348,7 +348,7 @@
         }
 
         .tour-mode .bike-emoji:nth-child(3n) {
-            content: '🚵';
+            content: '🚴';
             animation: cycleMoveDiagonal 12s linear infinite;
         }
 
@@ -388,6 +388,32 @@
         .tour-mode .slot.winning {
             background: #FFD700 !important;
             border: 2px solid #FFA500;
+        }
+
+        .random-bike {
+            position: fixed;
+            font-size: 24px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            animation: bikeFade 8s linear forwards;
+        }
+
+        @keyframes bikeFade {
+            0% {
+                opacity: 0;
+                transform: translate(var(--start-x), var(--start-y)) rotate(var(--rotation));
+            }
+            20% {
+                opacity: 0.3;
+            }
+            80% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--end-x), var(--end-y)) rotate(var(--rotation));
+            }
         }
 
         .foundators-message {
@@ -900,16 +926,48 @@
             document.querySelector('.slot-grid').classList.add('tour-mode');
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
             
-            // Aggiungi biciclette random
-            const slotGrid = document.querySelector('.slot-grid');
-            for (let i = 0; i < 6; i++) {
+            // Funzione per creare una bicicletta random
+            function createRandomBike() {
+                const bikeEmojis = ['🚲', '🚴', '🚴‍♂️', '🚴‍♀️', '🚵', '🚵‍♂️', '🚵‍♀️'];
                 const bike = document.createElement('div');
-                bike.className = 'bike-emoji';
-                bike.style.left = Math.random() * 100 + '%';
-                bike.style.top = Math.random() * 100 + '%';
-                bike.style.animationDelay = -(Math.random() * 10) + 's';
-                slotGrid.appendChild(bike);
+                bike.className = 'random-bike';
+                bike.textContent = bikeEmojis[Math.floor(Math.random() * bikeEmojis.length)];
+                
+                // Posizioni di partenza e arrivo casuali
+                const startX = -100 + Math.random() * 50; // Parte da fuori schermo a sinistra
+                const endX = 100 + Math.random() * 50; // Finisce fuori schermo a destra
+                const startY = Math.random() * 100;
+                const endY = startY + (Math.random() - 0.5) * 50; // Movimento verticale limitato
+                const rotation = Math.random() * 360;
+                
+                bike.style.setProperty('--start-x', startX + 'vw');
+                bike.style.setProperty('--start-y', startY + 'vh');
+                bike.style.setProperty('--end-x', endX + 'vw');
+                bike.style.setProperty('--end-y', endY + 'vh');
+                bike.style.setProperty('--rotation', rotation + 'deg');
+                
+                document.body.appendChild(bike);
+                
+                // Rimuovi la bicicletta dopo l'animazione
+                bike.addEventListener('animationend', () => {
+                    bike.remove();
+                });
             }
+            
+            // Crea biciclette iniziali
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => createRandomBike(), i * 1000);
+            }
+            
+            // Continua a creare nuove biciclette ogni tanto
+            const bikeInterval = setInterval(() => {
+                if (!tourModeActive) {
+                    clearInterval(bikeInterval);
+                    document.querySelectorAll('.random-bike').forEach(bike => bike.remove());
+                    return;
+                }
+                createRandomBike();
+            }, 2000);
         }
         
         function toggleAutoSpin() {
@@ -1247,7 +1305,10 @@
                 updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
                 if (tourSpinsRemaining === 0) {
                     tourModeActive = false;
+                    document.body.classList.remove('tour-mode');
                     document.querySelector('.slot-grid').classList.remove('tour-mode');
+                    // Rimuovi tutte le biciclette random
+                    document.querySelectorAll('.random-bike').forEach(bike => bike.remove());
                     updateMessage('TOUR MODE completato! 🏁', 'win-message');
                 }
             }
