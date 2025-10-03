@@ -934,11 +934,17 @@
             tourSpinsRemaining = spins;
             document.body.classList.add('tour-mode');
             document.querySelector('.slot-grid').classList.add('tour-mode');
+            // Assicurati che tutti i simboli rimangano evidenziati durante la TOUR MODE
+            const symbolsInRow = ['clover', 'bell', 'cherry', 'star', 'target'];
+            symbolsInRow.forEach(symbol => {
+                const symbolImg = document.querySelector(`.${symbol}-image`);
+                if (symbolImg) symbolImg.classList.add('symbol-highlight');
+            });
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
             
             // Funzione per creare una bicicletta random
             function createRandomBike() {
-                const bikeEmojis = ['🚲', '🚴', '🚴‍♂️', '🚴‍♀️', '🚵', '🚵‍♂️', '🚵‍♀️'];
+                const bikeEmojis = ['🚴‍♀️', '🚴', '🚴‍♂️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️'];
                 const bike = document.createElement('div');
                 bike.className = 'random-bike';
                 bike.textContent = bikeEmojis[Math.floor(Math.random() * bikeEmojis.length)];
@@ -1218,14 +1224,16 @@
                 winningSymbols.add(line.symbol);
             });
 
-            // Add new winning symbols to the permanent lit set
-            winningSymbols.forEach(symbol => {
-                litSymbols.add(symbol);
-                const symbolImg = document.querySelector(`.${symbol}-image`);
-                if (symbolImg) {
-                    symbolImg.classList.add('symbol-highlight');
-                }
-            });
+            // Add new winning symbols to the permanent lit set only if not in TOUR MODE
+            if (!tourModeActive) {
+                winningSymbols.forEach(symbol => {
+                    litSymbols.add(symbol);
+                    const symbolImg = document.querySelector(`.${symbol}-image`);
+                    if (symbolImg) {
+                        symbolImg.classList.add('symbol-highlight');
+                    }
+                });
+            }
 
             // Check if all symbols in the row are lit
             const symbolsInRow = ['clover', 'bell', 'cherry', 'star', 'target'];
@@ -1298,14 +1306,6 @@
                     popup.style.display = 'none';
                     activateTourMode(finalTourSpins);
                 };
-
-                // Reset lit symbols after timeout
-                setTimeout(() => {
-                    litSymbols.clear();
-                    document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
-                        .forEach(img => img.classList.remove('symbol-highlight'));
-                    updateMessage('Simboli resettati! Raccoglili di nuovo!', '');
-                }, BONUS_MESSAGE_TIMEOUT);
             }
         }
 
@@ -1321,6 +1321,10 @@
                     document.querySelector('.slot-grid').classList.remove('tour-mode');
                     // Rimuovi tutte le biciclette random
                     document.querySelectorAll('.random-bike').forEach(bike => bike.remove());
+                    // Reset dei simboli solo alla fine della TOUR MODE
+                    litSymbols.clear();
+                    document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
+                        .forEach(img => img.classList.remove('symbol-highlight'));
                     updateMessage('TOUR MODE completato! 🏁', 'win-message');
                 }
             }
@@ -1437,6 +1441,9 @@
         }
 
         function toggleSymbol(symbol) {
+            // Non permettere il toggle dei simboli durante la TOUR MODE
+            if (tourModeActive) return;
+
             const symbolImg = document.querySelector(`.${symbol}-image`);
             if (symbolImg) {
                 if (symbolImg.classList.contains('symbol-highlight')) {
