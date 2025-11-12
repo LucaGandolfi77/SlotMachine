@@ -24,7 +24,12 @@
     trailOpacity: 0.35,
     trailSizeScale: 0.9,
     // velocità: interpretiamo baseSpeed come px/frame a 60 FPS (compat legacy)
-    referenceFPS: 60
+    referenceFPS: 60,
+    // modalità mobile: caduta dall'alto
+    mobileFall: false,
+    gravity: 900, // px/s^2
+    driftXMax: 120, // px/s drift orizzontale massimo
+    removeOffscreen: true
   };
 
   function rand(min, max) {
@@ -60,15 +65,22 @@
       const el = document.createElement('div');
       el.className = 'bike';
       el.textContent = pick(this.opts.emojiList);
-      // posizione iniziale casuale
-      this.x = rand(0, Math.max(0, bounds.width - this.opts.size));
-      this.y = rand(0, Math.max(0, bounds.height - this.opts.size));
-      // direzione casuale
-      const angle = rand(0, Math.PI * 2);
-      // velocità in px/s usando referenceFPS (così resta costante a FPS diversi)
-      const v = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul;
-      this.dx = Math.cos(angle) * v;
-      this.dy = Math.sin(angle) * v;
+      const v = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul; // px/s
+      if (this.opts.mobileFall) {
+        // spawn in alto con x casuale
+        this.x = rand(0, Math.max(0, bounds.width - this.opts.size));
+        this.y = -this.opts.size;
+        this.dx = rand(-this.opts.driftXMax, this.opts.driftXMax);
+        this.dy = v; // velocità iniziale verso il basso
+      } else {
+        // posizione iniziale casuale ovunque
+        this.x = rand(0, Math.max(0, bounds.width - this.opts.size));
+        this.y = rand(0, Math.max(0, bounds.height - this.opts.size));
+        // direzione casuale
+        const angle = rand(0, Math.PI * 2);
+        this.dx = Math.cos(angle) * v;
+        this.dy = Math.sin(angle) * v;
+      }
       this.scaleX = this.dx < 0 ? -1 : 1;
       el.style.transform = `translate(${this.x}px, ${this.y}px) scaleX(${this.scaleX})`;
       this.container.appendChild(el);
@@ -80,7 +92,7 @@
       if (!this.el || !this.el.parentNode) return false;
 
       // jitter direzionale casuale per effetto "sciame"
-      if (Math.random() < this.opts.jitterChance) {
+      if (!this.opts.mobileFall && Math.random() < this.opts.jitterChance) {
         const theta = rand(-this.opts.jitterMaxAngle, this.opts.jitterMaxAngle);
         const rotated = rotate(this.dx, this.dy, theta);
         // normalizza alla velocità corrente
@@ -91,7 +103,7 @@
       }
 
       // micro-variazione della velocità
-      if (Math.random() < this.opts.speedJitterChance) {
+      if (!this.opts.mobileFall && Math.random() < this.opts.speedJitterChance) {
         const factor = 1 + rand(-this.opts.speedJitterRange, this.opts.speedJitterRange);
         this.speedMul = Math.max(this.opts.speedMinMul, Math.min(this.opts.speedMaxMul, this.speedMul * factor));
         const v = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul; // px/s
@@ -103,25 +115,45 @@
 
       // integrazione temporale
       const dt = Math.max(0.001, dtSec || 0); // evita 0
-      this.x += this.dx * dt;
-      this.y += this.dy * dt;
+      if (this.opts.mobileFall) {
+        // applica gravità e caduta
+        this.dy += this.opts.gravity * dt;
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
+      } else {
+        this.x += this.dx * dt;
+        this.y += this.dy * dt;
+      }
 
       const pad = this.opts.size; // margine per non uscire
 
-      if (this.x <= 0) {
-        this.x = 0;
-        this.dx = -this.dx;
-      } else if (this.x >= bounds.width - pad) {
-        this.x = bounds.width - pad;
-        this.dx = -this.dx;
-      }
-
-      if (this.y <= 0) {
-        this.y = 0;
-        this.dy = -this.dy;
-      } else if (this.y >= bounds.height - pad) {
-        this.y = bounds.height - pad;
-        this.dy = -this.dy;
+      if (this.opts.mobileFall) {
+        // rimuovi quando esce dal fondo
+        if (this.opts.removeOffscreen && this.y >= bounds.height + pad) {
+          this.remove();
+          return false;
+        }
+        // rimbalzi orizzontali opzionali se esce lateralmente
+        if (this.x <= 0) {
+          this.x = 0; this.dx = Math.abs(this.dx);
+        } else if (this.x >= bounds.width - pad) {
+          this.x = bounds.width - pad; this.dx = -Math.abs(this.dx);
+        }
+      } else {
+        if (this.x <= 0) {
+          this.x = 0;
+          this.dx = -this.dx;
+        } else if (this.x >= bounds.width - pad) {
+          this.x = bounds.width - pad;
+          this.dx = -this.dx;
+        }
+        if (this.y <= 0) {
+          this.y = 0;
+          this.dy = -this.dy;
+        } else if (this.y >= bounds.height - pad) {
+          this.y = bounds.height - pad;
+          this.dy = -this.dy;
+        }
       }
 
       this.scaleX = this.dx < 0 ? -1 : 1;

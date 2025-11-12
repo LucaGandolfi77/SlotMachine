@@ -80,6 +80,8 @@
             padding: 10px;
             background: rgba(0, 0, 0, 0.3);
             border-radius: 15px;
+            position: relative; /* per gestire layering con le bici */
+            z-index: 150;
         }
 
         .slot {
@@ -409,7 +411,7 @@
             font-size: 32px;
             opacity: 0.9;
             pointer-events: none;
-            z-index: 100;
+            z-index: 100; /* desktop: sotto i controlli (200), sopra lo sfondo */
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             will-change: transform;
         }
@@ -427,6 +429,7 @@
         body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
         body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
         body.mobile-lite .bike { font-size: 24px; }
+    body.mobile-lite .bike { z-index: 50; } /* sotto slot-grid (150) e controlli (200) */
         body.mobile-lite .bike-trail { display: none !important; }
         body.mobile-lite .tour-mode::before,
         body.mobile-lite .tour-mode::after { display: none; content: none; }
@@ -993,15 +996,18 @@
             // Avvia sciame biciclette
             if (!bikeSwarm) {
                 const baseOptions = isMobileLite ? {
-                    initialCount: 8, /* un po' più bici su mobile */
-                    maxBikes: 16,
-                    spawnMin: 450,
-                    spawnMax: 1200,
-                    baseSpeed: 6,
-                    jitterChance: 0.02,
-                    jitterMaxAngle: 0.25,
+                    initialCount: 10,
+                    maxBikes: 20,
+                    spawnMin: 300,
+                    spawnMax: 900,
+                    baseSpeed: 5.5,
+                    jitterChance: 0, /* disattivato in caduta */
+                    jitterMaxAngle: 0,
                     trailEnabled: false,
-                    targetFPS: 30
+                    targetFPS: 30,
+                    mobileFall: true,
+                    gravity: 850,
+                    driftXMax: 100
                 } : {
                     initialCount: 14,
                     maxBikes: 34,
@@ -1015,8 +1021,11 @@
                 };
                 bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
             } else if (isMobileLite) {
-                // Adegua ai nuovi parametri time-based
-                bikeSwarm.applyOptions({ baseSpeed: 6, maxBikes: 16, spawnMin: 450, spawnMax: 1200, jitterChance: 0.02 });
+                // Switch a modalità caduta se non ancora attiva
+                bikeSwarm.applyOptions({ baseSpeed: 5.5, maxBikes: 20, spawnMin: 300, spawnMax: 900, jitterChance: 0 });
+                bikeSwarm.opts.mobileFall = true;
+                bikeSwarm.opts.gravity = 850;
+                bikeSwarm.opts.driftXMax = 100;
                 bikeSwarm.opts.trailEnabled = false;
             }
             bikeSwarm.start();
