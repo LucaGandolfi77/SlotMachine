@@ -421,6 +421,16 @@
             pointer-events: none; /* non intercetta i tocchi */
         }
 
+        /* Modalità leggera per mobile */
+        body.mobile-lite .paytable { display: none; }
+        body.mobile-lite .container { padding: 12px; max-width: 360px; }
+        body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
+        body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
+        body.mobile-lite .bike { font-size: 24px; }
+        body.mobile-lite .bike-trail { display: none !important; }
+        body.mobile-lite .tour-mode::before,
+        body.mobile-lite .tour-mode::after { display: none; content: none; }
+
         .random-bike {
             position: fixed;
             font-size: 24px;
@@ -754,6 +764,18 @@
 
         const BONUS_MESSAGE_TIMEOUT = 3000;
         
+        // Rilevamento modalità "mobile-lite"
+        const isMobileLite = (function() {
+            const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+            const isMobileUA = /android|iphone|ipad|ipod/.test(ua);
+            const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            const small = Math.min(window.innerWidth || 0, screen && screen.width || 0) <= 480;
+            return isMobileUA || (coarse && small);
+        })();
+        if (isMobileLite) {
+            document.body.classList.add('mobile-lite');
+        }
+        
         // Funzione per generare un numero casuale tra min e max
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -970,9 +992,19 @@
             
             // Avvia sciame biciclette
             if (!bikeSwarm) {
-                bikeSwarm = new BikeSwarm(document.querySelector('.container'), {
+                const baseOptions = isMobileLite ? {
+                    initialCount: 4,
+                    maxBikes: 10,
+                    spawnMin: 500,
+                    spawnMax: 1500,
+                    baseSpeed: 6,
+                    jitterChance: 0.02,
+                    jitterMaxAngle: 0.25,
+                    trailEnabled: false,
+                    targetFPS: 30
+                } : {
                     initialCount: 12,
-                    maxBikes: 30, // leggero aumento per effetto sciame
+                    maxBikes: 30,
                     spawnMin: 300,
                     spawnMax: 1400,
                     baseSpeed: 8,
@@ -980,7 +1012,12 @@
                     jitterMaxAngle: 0.35,
                     trailEnabled: true,
                     targetFPS: 60
-                });
+                };
+                bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
+            } else if (isMobileLite) {
+                // Se esiste già, adegua ai parametri leggeri per mobile
+                bikeSwarm.applyOptions({ baseSpeed: 6, maxBikes: 10, spawnMin: 500, spawnMax: 1500, jitterChance: 0.02 });
+                bikeSwarm.opts.trailEnabled = false;
             }
             bikeSwarm.start();
         }
