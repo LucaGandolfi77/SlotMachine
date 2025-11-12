@@ -400,6 +400,23 @@
             border: 2px solid #FFA500;
         }
 
+        /* Stile per le biciclette dinamiche */
+        .bike {
+            position: absolute;
+            font-size: 32px;
+            opacity: 0.9;
+            pointer-events: none;
+            z-index: 100;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            will-change: transform;
+        }
+
+        /* Scia delle bici */
+        .bike-trail {
+            font-size: 28px;
+            filter: blur(0.3px) drop-shadow(0 0 4px rgba(255,255,255,0.4));
+        }
+
         .random-bike {
             position: fixed;
             font-size: 24px;
@@ -718,6 +735,8 @@
         </div>
     </div>
 
+    <script src="swarm.js"></script>
+
     <script>
         // Variabili globali
         let balance = 100.00;
@@ -928,7 +947,10 @@
             return symbols[Math.floor(Math.random() * symbols.length)];
         }
 
-        // Funzione per attivare la TOUR MODE
+    // Gestore sciame biciclette (istanza riutilizzabile)
+        let bikeSwarm = null;
+
+        // Funzione per attivare la TOUR MODE (ora usa BikeSwarm)
         function activateTourMode(spins) {
             tourModeActive = true;
             tourSpinsRemaining = spins;
@@ -942,50 +964,21 @@
             });
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
             
-            // Funzione per creare una bicicletta random
-            function createRandomBike() {
-                const bikeEmojis = ['🚴‍♀️', '🚴', '🚴‍♂️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️', '🚴‍♀️'];
-                const bike = document.createElement('div');
-                bike.className = 'random-bike';
-                bike.textContent = bikeEmojis[Math.floor(Math.random() * bikeEmojis.length)];
-                
-                // Posizioni di partenza e arrivo casuali
-                const startX = -100 + Math.random() * 50; // Parte da fuori schermo a sinistra
-                const endX = 100 + Math.random() * 50; // Finisce fuori schermo a destra
-                const startY = Math.random() * 100;
-                const endY = startY + (Math.random() - 0.5) * 50; // Movimento verticale limitato
-                const rotation = Math.random() * 360;
-                
-                bike.style.setProperty('--start-x', startX + 'vw');
-                bike.style.setProperty('--start-y', startY + 'vh');
-                bike.style.setProperty('--end-x', endX + 'vw');
-                bike.style.setProperty('--end-y', endY + 'vh');
-                bike.style.setProperty('--rotation', rotation + 'deg');
-                
-                document.body.appendChild(bike);
-                
-                // Rimuovi la bicicletta dopo l'animazione
-                bike.addEventListener('animationend', () => {
-                    bike.remove();
+            // Avvia sciame biciclette
+            if (!bikeSwarm) {
+                bikeSwarm = new BikeSwarm(document.querySelector('.container'), {
+                    initialCount: 12,
+                    maxBikes: 30, // leggero aumento per effetto sciame
+                    spawnMin: 300,
+                    spawnMax: 1400,
+                    baseSpeed: 8,
+                    jitterChance: 0.035,
+                    jitterMaxAngle: 0.35,
+                    trailEnabled: true,
+                    targetFPS: 60
                 });
             }
-            
-            // Crea biciclette iniziali (più numerose)
-            for (let i = 0; i < 12; i++) {
-                setTimeout(() => createRandomBike(), i * 500); // Ridotto il delay tra le biciclette
-            }
-            
-            // Continua a creare nuove biciclette più frequentemente
-            const bikeInterval = setInterval(() => {
-                if (!tourModeActive) {
-                    clearInterval(bikeInterval);
-                    document.querySelectorAll('.random-bike').forEach(bike => bike.remove());
-                    return;
-                }
-                createRandomBike();
-                // Crea una seconda bicicletta con un leggero ritardo
-                setTimeout(() => createRandomBike(), 300);
-            }, 1000); // Ridotto l'intervallo tra le ondate di biciclette
+            bikeSwarm.start();
         }
         
         function toggleAutoSpin() {
@@ -1319,8 +1312,10 @@
                     tourModeActive = false;
                     document.body.classList.remove('tour-mode');
                     document.querySelector('.slot-grid').classList.remove('tour-mode');
-                    // Rimuovi tutte le biciclette random
-                    document.querySelectorAll('.random-bike').forEach(bike => bike.remove());
+                    // Ferma e pulisci lo sciame biciclette
+                    if (bikeSwarm) {
+                        bikeSwarm.stop();
+                    }
                     // Reset dei simboli solo alla fine della TOUR MODE
                     litSymbols.clear();
                     document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
@@ -1391,6 +1386,10 @@
                 if (foundatorsWin) {
                     const message = `🏆 PADRI FONDATORI! +${(currentBet * 77).toFixed(2)}€ + 7 Free Spins! 🎰`;
                     updateMessage(message, 'foundators-message');
+                    // Boost forte allo sciame durante la TOUR MODE
+                    if (tourModeActive && bikeSwarm && typeof bikeSwarm.boost === 'function') {
+                        bikeSwarm.boost({ extraBikes: 12, duration: 4000, spawnMin: 80, spawnMax: 200, maxBikesInc: 15 });
+                    }
                 } else {
                     let message = `🎉 VINCITA! +${result.totalWin.toFixed(2)}€`;
                     if (result.bonusFreeSpins > 0) {
@@ -1403,6 +1402,14 @@
                     message += ` (${bestWin.count} ${symbolToEmoji[bestWin.symbol]})`;
                     
                     updateMessage(message, 'win-message');
+                    // Boost moderato in base alla forza della linea migliore
+                    if (tourModeActive && bikeSwarm && typeof bikeSwarm.boost === 'function') {
+                        if (bestWin.count >= 5) {
+                            bikeSwarm.boost({ extraBikes: 8, duration: 3000, spawnMin: 120, spawnMax: 260, maxBikesInc: 10 });
+                        } else if (bestWin.count === 4) {
+                            bikeSwarm.boost({ extraBikes: 5, duration: 2200, spawnMin: 180, spawnMax: 320, maxBikesInc: 6 });
+                        }
+                    }
                 }
                 
                 updateBalance();
@@ -1553,6 +1560,59 @@
             }
             lastTouchEnd = now;
         }, false);
+
+        // Debug panel (toggle con Shift+D): parametri live dello sciame
+        (function setupSwarmDebug() {
+            const panel = document.createElement('div');
+            panel.id = 'swarm-debug';
+            panel.style.position = 'fixed';
+            panel.style.right = '12px';
+            panel.style.bottom = '12px';
+            panel.style.background = 'rgba(0,0,0,0.6)';
+            panel.style.color = '#fff';
+            panel.style.padding = '10px 12px';
+            panel.style.borderRadius = '8px';
+            panel.style.fontSize = '12px';
+            panel.style.backdropFilter = 'blur(4px)';
+            panel.style.zIndex = '2000';
+            panel.style.display = 'none';
+            panel.style.minWidth = '220px';
+            panel.innerHTML = `
+                <div style="font-weight:700; margin-bottom:6px">Swarm Debug</div>
+                <label style="display:block; margin:6px 0">Velocità base
+                    <input id="sd-speed" type="range" min="2" max="16" step="0.5" value="8" style="width:100%">
+                </label>
+                <label style="display:block; margin:6px 0">Max bici
+                    <input id="sd-max" type="range" min="5" max="60" step="1" value="30" style="width:100%">
+                </label>
+                <label style="display:block; margin:6px 0">Jitter (%)
+                    <input id="sd-jitter" type="range" min="0" max="10" step="0.2" value="3.5" style="width:100%">
+                </label>
+                <div style="margin-top:6px; opacity:0.8">Shift+D per mostrare/nascondere</div>
+            `;
+            document.body.appendChild(panel);
+
+            function applyDebugOptions() {
+                if (!bikeSwarm) return;
+                const baseSpeed = parseFloat(document.getElementById('sd-speed').value);
+                const maxBikes = parseInt(document.getElementById('sd-max').value, 10);
+                const jitterPct = parseFloat(document.getElementById('sd-jitter').value);
+                const jitterChance = Math.max(0, Math.min(1, jitterPct / 100));
+                bikeSwarm.applyOptions({ baseSpeed, maxBikes, jitterChance });
+            }
+
+            panel.addEventListener('input', (e) => {
+                if (['sd-speed','sd-max','sd-jitter'].includes(e.target.id)) {
+                    applyDebugOptions();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'd' && e.shiftKey) {
+                    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        })();
     </script>
 </body>
 </html>
