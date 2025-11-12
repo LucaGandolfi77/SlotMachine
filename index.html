@@ -32,6 +32,7 @@
             border: 1px solid rgba(255, 255, 255, 0.18);
             max-width: 400px;
             width: 100%;
+            position: relative; /* per contenere le bici assolute */
         }
 
         .header {
@@ -141,6 +142,8 @@
             flex-direction: column;
             gap: 15px;
             margin-top: 20px;
+            position: relative;
+            z-index: 200; /* sopra le bici */
         }
         
         .action-buttons {
@@ -415,6 +418,7 @@
         .bike-trail {
             font-size: 28px;
             filter: blur(0.3px) drop-shadow(0 0 4px rgba(255,255,255,0.4));
+            pointer-events: none; /* non intercetta i tocchi */
         }
 
         .random-bike {
@@ -1316,6 +1320,8 @@
                     if (bikeSwarm) {
                         bikeSwarm.stop();
                     }
+                    // Rimuovi eventuali scie residue
+                    document.querySelectorAll('.bike-trail').forEach(n => n.remove());
                     // Reset dei simboli solo alla fine della TOUR MODE
                     litSymbols.clear();
                     document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
@@ -1561,58 +1567,7 @@
             lastTouchEnd = now;
         }, false);
 
-        // Debug panel (toggle con Shift+D): parametri live dello sciame
-        (function setupSwarmDebug() {
-            const panel = document.createElement('div');
-            panel.id = 'swarm-debug';
-            panel.style.position = 'fixed';
-            panel.style.right = '12px';
-            panel.style.bottom = '12px';
-            panel.style.background = 'rgba(0,0,0,0.6)';
-            panel.style.color = '#fff';
-            panel.style.padding = '10px 12px';
-            panel.style.borderRadius = '8px';
-            panel.style.fontSize = '12px';
-            panel.style.backdropFilter = 'blur(4px)';
-            panel.style.zIndex = '2000';
-            panel.style.display = 'none';
-            panel.style.minWidth = '220px';
-            panel.innerHTML = `
-                <div style="font-weight:700; margin-bottom:6px">Swarm Debug</div>
-                <label style="display:block; margin:6px 0">Velocità base
-                    <input id="sd-speed" type="range" min="2" max="16" step="0.5" value="8" style="width:100%">
-                </label>
-                <label style="display:block; margin:6px 0">Max bici
-                    <input id="sd-max" type="range" min="5" max="60" step="1" value="30" style="width:100%">
-                </label>
-                <label style="display:block; margin:6px 0">Jitter (%)
-                    <input id="sd-jitter" type="range" min="0" max="10" step="0.2" value="3.5" style="width:100%">
-                </label>
-                <div style="margin-top:6px; opacity:0.8">Shift+D per mostrare/nascondere</div>
-            `;
-            document.body.appendChild(panel);
-
-            function applyDebugOptions() {
-                if (!bikeSwarm) return;
-                const baseSpeed = parseFloat(document.getElementById('sd-speed').value);
-                const maxBikes = parseInt(document.getElementById('sd-max').value, 10);
-                const jitterPct = parseFloat(document.getElementById('sd-jitter').value);
-                const jitterChance = Math.max(0, Math.min(1, jitterPct / 100));
-                bikeSwarm.applyOptions({ baseSpeed, maxBikes, jitterChance });
-            }
-
-            panel.addEventListener('input', (e) => {
-                if (['sd-speed','sd-max','sd-jitter'].includes(e.target.id)) {
-                    applyDebugOptions();
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key.toLowerCase() === 'd' && e.shiftKey) {
-                    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-                }
-            });
-        })();
+        // Rimozione pannello debug: semplifica interazione mobile.
     </script>
 </body>
 </html>
