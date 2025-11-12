@@ -14,7 +14,7 @@
     targetFPS: 60,
     speedJitterChance: 0.015,
     speedJitterRange: 0.08, // +/-8%
-    speedMinMul: 0.6,
+  speedMinMul: 0.85,
     speedMaxMul: 1.6,
     tiltFactor: 0.2, // fattore di inclinazione (0-0.4 consigliato)
     // scie
@@ -22,7 +22,9 @@
     trailInterval: 120, // ms
     trailLinger: 600, // ms
     trailOpacity: 0.35,
-    trailSizeScale: 0.9
+    trailSizeScale: 0.9,
+    // velocità: interpretiamo baseSpeed come px/frame a 60 FPS (compat legacy)
+    referenceFPS: 60
   };
 
   function rand(min, max) {
@@ -50,7 +52,7 @@
       this.dx = 0;
       this.dy = 0;
       this.scaleX = 1;
-      this.speedMul = rand(0.7, 1.3);
+  this.speedMul = Math.max(this.opts.speedMinMul, Math.min(this.opts.speedMaxMul, rand(0.85, 1.3)));
       this.lastTrail = 0;
     }
 
@@ -63,7 +65,8 @@
       this.y = rand(0, Math.max(0, bounds.height - this.opts.size));
       // direzione casuale
       const angle = rand(0, Math.PI * 2);
-      const v = this.opts.baseSpeed * this.speedMul;
+      // velocità in px/s usando referenceFPS (così resta costante a FPS diversi)
+      const v = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul;
       this.dx = Math.cos(angle) * v;
       this.dy = Math.sin(angle) * v;
       this.scaleX = this.dx < 0 ? -1 : 1;
@@ -73,7 +76,7 @@
       return this;
     }
 
-    update(bounds, ts) {
+    update(bounds, ts, dtSec) {
       if (!this.el || !this.el.parentNode) return false;
 
       // jitter direzionale casuale per effetto "sciame"
@@ -82,7 +85,7 @@
         const rotated = rotate(this.dx, this.dy, theta);
         // normalizza alla velocità corrente
         const speed = Math.hypot(rotated.dx, rotated.dy) || 1;
-        const target = this.opts.baseSpeed * this.speedMul;
+        const target = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul; // px/s
         this.dx = (rotated.dx / speed) * target;
         this.dy = (rotated.dy / speed) * target;
       }
@@ -91,15 +94,17 @@
       if (Math.random() < this.opts.speedJitterChance) {
         const factor = 1 + rand(-this.opts.speedJitterRange, this.opts.speedJitterRange);
         this.speedMul = Math.max(this.opts.speedMinMul, Math.min(this.opts.speedMaxMul, this.speedMul * factor));
-        const v = this.opts.baseSpeed * this.speedMul;
+        const v = this.opts.baseSpeed * this.opts.referenceFPS * this.speedMul; // px/s
         const mag = Math.hypot(this.dx, this.dy) || 1;
         // mantieni direzione, scala a nuova velocità
         this.dx = (this.dx / mag) * v;
         this.dy = (this.dy / mag) * v;
       }
 
-      this.x += this.dx;
-      this.y += this.dy;
+      // integrazione temporale
+      const dt = Math.max(0.001, dtSec || 0); // evita 0
+      this.x += this.dx * dt;
+      this.y += this.dy * dt;
 
       const pad = this.opts.size; // margine per non uscire
 
@@ -228,8 +233,9 @@
       }
       this._lastTs = ts;
       const bounds = this.container.getBoundingClientRect();
+      const dtSec = delta / 1000;
       this.bikes = this.bikes.filter(b => {
-        const alive = b.update(bounds, ts);
+        const alive = b.update(bounds, ts, dtSec);
         return alive;
       });
       this.rafId = requestAnimationFrame(this._loop);

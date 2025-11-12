@@ -993,20 +993,20 @@
             // Avvia sciame biciclette
             if (!bikeSwarm) {
                 const baseOptions = isMobileLite ? {
-                    initialCount: 4,
-                    maxBikes: 10,
-                    spawnMin: 500,
-                    spawnMax: 1500,
+                    initialCount: 8, /* un po' più bici su mobile */
+                    maxBikes: 16,
+                    spawnMin: 450,
+                    spawnMax: 1200,
                     baseSpeed: 6,
                     jitterChance: 0.02,
                     jitterMaxAngle: 0.25,
                     trailEnabled: false,
                     targetFPS: 30
                 } : {
-                    initialCount: 12,
-                    maxBikes: 30,
-                    spawnMin: 300,
-                    spawnMax: 1400,
+                    initialCount: 14,
+                    maxBikes: 34,
+                    spawnMin: 280,
+                    spawnMax: 1300,
                     baseSpeed: 8,
                     jitterChance: 0.035,
                     jitterMaxAngle: 0.35,
@@ -1015,8 +1015,8 @@
                 };
                 bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
             } else if (isMobileLite) {
-                // Se esiste già, adegua ai parametri leggeri per mobile
-                bikeSwarm.applyOptions({ baseSpeed: 6, maxBikes: 10, spawnMin: 500, spawnMax: 1500, jitterChance: 0.02 });
+                // Adegua ai nuovi parametri time-based
+                bikeSwarm.applyOptions({ baseSpeed: 6, maxBikes: 16, spawnMin: 450, spawnMax: 1200, jitterChance: 0.02 });
                 bikeSwarm.opts.trailEnabled = false;
             }
             bikeSwarm.start();
