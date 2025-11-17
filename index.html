@@ -697,15 +697,10 @@
                 </button>
             </div>
 
-            <div class="bet-controls">
-                <button class="bet-button" type="button">-</button>
-                <span class="bet-amount"><span id="bet-display">1.00</span> €</span>
-                <button class="bet-button" type="button">+</button>
-            </div>
         </div>
 
         <div class="message" id="message">
-            Imposta la tua puntata e gira per vincere!
+            Gira per bere in tutti i bar e vincere!
         </div>
 
         <div class="paytable">
@@ -757,7 +752,7 @@
     <script>
         // Variabili globali
         let balance = 100.00;
-        let currentBet = 1.00;
+        const currentBet = 1.00;
         let freeSpins = 0;
         let spinning = false;
         let autoSpinInterval = null;
@@ -848,66 +843,13 @@
 
         const balanceEl = document.getElementById('balance');
         const currentBetEl = document.getElementById('current-bet');
-        const betDisplayEl = document.getElementById('bet-display');
         const freeSpinsEl = document.getElementById('free-spins');
         const messageEl = document.getElementById('message');
         const spinButton = document.getElementById('spin-button');
         const autoButton = document.getElementById('auto-button');
         const slots = document.querySelectorAll('.slot');
 
-        function increaseBet() {
-            if (currentBet < Math.min(balance, 10) && currentBet < 10) {
-                currentBet += 0.50;
-                updateBetDisplay();
-            }
-        }
-
-        function decreaseBet() {
-            if (currentBet > 0.50) {
-                currentBet -= 0.50;
-                updateBetDisplay();
-            }
-        }
-
         function addTouchEvents() {
-            const increaseBetBtn = document.querySelector('.bet-controls .bet-button:last-child');
-            const decreaseBetBtn = document.querySelector('.bet-controls .bet-button:first-child');
-            
-            increaseBetBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                this.style.transform = 'translateY(0)';
-                this.style.background = '#FF3030';
-            });
-            
-            increaseBetBtn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                this.style.transform = 'translateY(-2px)';
-                this.style.background = '#FF6B6B';
-                increaseBet();
-            });
-            
-            increaseBetBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                increaseBet();
-            });
-            
-            decreaseBetBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                this.style.transform = 'translateY(0)';
-                this.style.background = '#FF3030';
-            });
-            
-            decreaseBetBtn.addEventListener('touchend', function(e) {
-                e.preventDefault();
-                this.style.transform = 'translateY(-2px)';
-                this.style.background = '#FF6B6B';
-                decreaseBet();
-            });
-            
-            decreaseBetBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                decreaseBet();
-            });
             
             spinButton.addEventListener('touchstart', function(e) {
                 e.preventDefault();
@@ -956,7 +898,6 @@
 
         function updateBetDisplay() {
             currentBetEl.textContent = currentBet.toFixed(2);
-            betDisplayEl.textContent = currentBet.toFixed(2);
         }
 
         function updateBalance() {
