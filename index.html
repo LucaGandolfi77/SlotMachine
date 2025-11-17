@@ -436,14 +436,49 @@
             padding: 10px 12px 12px;
             max-width: 360px;
             min-height: calc(100vh - 40px);
+            position: relative;
+            z-index: 2;
         }
         body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
         body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
-        body.mobile-lite .bike { font-size: 24px; }
-        body.mobile-lite .bike { z-index: 50; } /* sotto slot-grid (150) e controlli (200) */
-        body.mobile-lite .bike-trail { display: none !important; }
-        body.mobile-lite .tour-mode::before,
-        body.mobile-lite .tour-mode::after { display: none; content: none; }
+        body.mobile-lite .bike,
+        body.mobile-lite .bike-trail,
+        body.mobile-lite .bike-emoji {
+            display: none !important;
+        }
+        body.mobile-lite.tour-mode::before,
+        body.mobile-lite.tour-mode::after {
+            animation: none;
+            opacity: 0.16;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 2rem;
+            line-height: 1.6;
+            text-align: center;
+            white-space: pre-line;
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.04) 0,
+                rgba(255, 255, 255, 0.04) 18px,
+                transparent 18px,
+                transparent 36px
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        body.mobile-lite.tour-mode::before {
+            content: '🚴 🚴 🚴 🚴 🚴\A🚴 🚴 🚴 🚴 🚴';
+        }
+        body.mobile-lite.tour-mode::after {
+            content: '🚴‍♂️ 🚴‍♀️ 🚴 🚴 🚴\A🚴 🚴‍♂️ 🚴‍♀️ 🚴';
+            opacity: 0.08;
+            font-size: 2.2rem;
+            transform: rotate(2deg);
+        }
 
         .random-bike {
             position: fixed;
@@ -945,43 +980,30 @@
             });
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
             
-            // Avvia sciame biciclette
-            if (!bikeSwarm) {
-                const baseOptions = isMobileLite ? {
-                    initialCount: 18,
-                    maxBikes: 60,
-                    spawnMin: 400,
-                    spawnMax: 900,
-                    baseSpeed: 4,
-                    jitterChance: 0,
-                    jitterMaxAngle: 0,
-                    trailEnabled: false,
-                    targetFPS: 30,
-                    mobileFall: true,
-                    gravity: 960,
-                    driftXMax: 180,
-                    removeOffscreen: true
-                } : {
-                    initialCount: 14,
-                    maxBikes: 34,
-                    spawnMin: 280,
-                    spawnMax: 1300,
-                    baseSpeed: 8,
-                    jitterChance: 0.035,
-                    jitterMaxAngle: 0.35,
-                    trailEnabled: true,
-                    targetFPS: 60
-                };
-                bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
-            } else if (isMobileLite) {
-                // Switch a modalità caduta se non ancora attiva
-                bikeSwarm.applyOptions({ baseSpeed: 5.5, maxBikes: 20, spawnMin: 300, spawnMax: 900, jitterChance: 0 });
-                bikeSwarm.opts.mobileFall = true;
-                bikeSwarm.opts.gravity = 850;
-                bikeSwarm.opts.driftXMax = 100;
-                bikeSwarm.opts.trailEnabled = false;
+            // Avvia sciame biciclette solo su desktop
+            if (!isMobileLite) {
+                if (!bikeSwarm) {
+                    const baseOptions = {
+                        initialCount: 14,
+                        maxBikes: 34,
+                        spawnMin: 280,
+                        spawnMax: 1300,
+                        baseSpeed: 8,
+                        jitterChance: 0.035,
+                        jitterMaxAngle: 0.35,
+                        trailEnabled: true,
+                        targetFPS: 60
+                    };
+                    bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
+                }
+                bikeSwarm.start();
+            } else {
+                if (bikeSwarm) {
+                    bikeSwarm.stop();
+                    bikeSwarm = null;
+                }
+                document.querySelectorAll('.bike, .bike-trail, .bike-emoji').forEach(el => el.remove());
             }
-            bikeSwarm.start();
         }
         
         function toggleAutoSpin() {
