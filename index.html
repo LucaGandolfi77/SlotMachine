@@ -948,18 +948,19 @@
             // Avvia sciame biciclette
             if (!bikeSwarm) {
                 const baseOptions = isMobileLite ? {
-                    initialCount: 10,
-                    maxBikes: 20,
-                    spawnMin: 300,
-                    spawnMax: 900,
-                    baseSpeed: 5.5,
-                    jitterChance: 0, /* disattivato in caduta */
+                    initialCount: 18,
+                    maxBikes: 60,
+                    spawnMin: 140,
+                    spawnMax: 400,
+                    baseSpeed: 6,
+                    jitterChance: 0,
                     jitterMaxAngle: 0,
                     trailEnabled: false,
                     targetFPS: 30,
                     mobileFall: true,
-                    gravity: 850,
-                    driftXMax: 100
+                    gravity: 960,
+                    driftXMax: 180,
+                    removeOffscreen: true
                 } : {
                     initialCount: 14,
                     maxBikes: 34,
