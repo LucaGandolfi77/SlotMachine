@@ -811,10 +811,11 @@
         // Rilevamento modalità "mobile-lite"
         const isMobileLite = (function() {
             const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
-            const isMobileUA = /android|iphone|ipad|ipod/.test(ua);
+            const isMobileUA = /android|iphone|ipad|ipod|mobile|tablet/.test(ua);
             const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-            const small = Math.min(window.innerWidth || 0, screen && screen.width || 0) <= 480;
-            return isMobileUA || (coarse && small);
+            const touchCapable = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0 || (navigator.msMaxTouchPoints || 0) > 0;
+            const smallViewport = Math.min(window.innerWidth || 0, (screen && screen.width) || 0) <= 760;
+            return isMobileUA || touchCapable || (coarse && smallViewport) || smallViewport;
         })();
         if (isMobileLite) {
             document.body.classList.add('mobile-lite');
