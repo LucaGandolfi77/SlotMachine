@@ -424,12 +424,19 @@
         }
 
         /* Modalità leggera per mobile */
-        body.mobile-lite .paytable { display: none; }
-        body.mobile-lite .container { padding: 12px; max-width: 360px; }
+        body.mobile-lite {
+            justify-content: flex-start;
+            padding-top: 10px;
+        }
+        body.mobile-lite .container {
+            padding: 12px;
+            max-width: 360px;
+            min-height: calc(100vh - 40px);
+        }
         body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
         body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
         body.mobile-lite .bike { font-size: 24px; }
-    body.mobile-lite .bike { z-index: 50; } /* sotto slot-grid (150) e controlli (200) */
+        body.mobile-lite .bike { z-index: 50; } /* sotto slot-grid (150) e controlli (200) */
         body.mobile-lite .bike-trail { display: none !important; }
         body.mobile-lite .tour-mode::before,
         body.mobile-lite .tour-mode::after { display: none; content: none; }
