@@ -423,7 +423,7 @@
             font-size: 32px;
             opacity: 0.9;
             pointer-events: none;
-            z-index: 100; /* desktop: sotto i controlli (200), sopra lo sfondo */
+            z-index: 1000; /* Assicura che siano sopra a tutto */
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             will-change: transform;
         }
@@ -979,7 +979,8 @@
                     trailEnabled: !isMobile, // Disabilita scie su mobile per performance
                     targetFPS: 60
                 };
-                bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
+                // Usa document.body come container per coprire tutto lo schermo
+                bikeSwarm = new BikeSwarm(document.body, baseOptions);
             }
             bikeSwarm.start();
         }
