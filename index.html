@@ -356,60 +356,7 @@
         .tour-mode::before,
         .tour-mode::after,
         .tour-mode .bike-emoji {
-            position: absolute;
-            font-size: 24px;
-            opacity: 0.5;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-            pointer-events: none;
-        }
-
-        .tour-mode::before {
-            content: '🚴';
-            animation: cycleMove 10s linear infinite;
-        }
-
-        .tour-mode::after {
-            content: '🚴';
-            animation: cycleMove 8s linear infinite;
-            animation-delay: -4s;
-        }
-
-        .tour-mode .bike-emoji:nth-child(3n) {
-            content: '🚴';
-            animation: cycleMoveDiagonal 12s linear infinite;
-        }
-
-        .tour-mode .bike-emoji:nth-child(3n + 1) {
-            content: '🚴‍♂️';
-            animation: cycleMoveReverse 15s linear infinite;
-        }
-
-        .tour-mode .bike-emoji:nth-child(3n + 2) {
-            content: '🚴‍♀️';
-            animation: cycleMoveCurved 20s linear infinite;
-        }
-
-        @keyframes cycleMove {
-            0% { transform: translate(-100%, 50%); }
-            100% { transform: translate(200%, 50%); }
-        }
-
-        @keyframes cycleMoveReverse {
-            0% { transform: translate(200%, 30%) scaleX(-1); }
-            100% { transform: translate(-100%, 30%) scaleX(-1); }
-        }
-
-        @keyframes cycleMoveDiagonal {
-            0% { transform: translate(-100%, -100%) rotate(45deg); }
-            100% { transform: translate(200%, 200%) rotate(45deg); }
-        }
-
-        @keyframes cycleMoveCurved {
-            0% { transform: translate(-100%, 0%) rotate(0deg); }
-            25% { transform: translate(0%, 25%) rotate(15deg); }
-            50% { transform: translate(100%, 50%) rotate(0deg); }
-            75% { transform: translate(150%, 25%) rotate(-15deg); }
-            100% { transform: translate(200%, 0%) rotate(0deg); }
+            display: none !important;
         }
 
         .tour-mode .slot.winning {
@@ -451,11 +398,6 @@
         }
         body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
         body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
-        /* Rimosso display: none per le bici su mobile per permettere BikeSwarm */
-        body.mobile-lite.tour-mode::before,
-        body.mobile-lite.tour-mode::after {
-            display: none; /* Nascondi le animazioni CSS di fallback */
-        }
 
         .random-bike {
             position: fixed;
