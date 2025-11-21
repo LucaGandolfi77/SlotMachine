@@ -451,43 +451,10 @@
         }
         body.mobile-lite .slot-grid { padding: 8px; gap: 2px; }
         body.mobile-lite .spin-button, body.mobile-lite .auto-button { padding: 16px; }
-        body.mobile-lite .bike,
-        body.mobile-lite .bike-trail,
-        body.mobile-lite .bike-emoji {
-            display: none !important;
-        }
+        /* Rimosso display: none per le bici su mobile per permettere BikeSwarm */
         body.mobile-lite.tour-mode::before,
         body.mobile-lite.tour-mode::after {
-            animation: none;
-            opacity: 0.16;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 2rem;
-            line-height: 1.6;
-            text-align: center;
-            white-space: pre-line;
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                45deg,
-                rgba(255, 255, 255, 0.04) 0,
-                rgba(255, 255, 255, 0.04) 18px,
-                transparent 18px,
-                transparent 36px
-            );
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-        }
-        body.mobile-lite.tour-mode::before {
-            content: '🚴 🚴 🚴 🚴 🚴\A🚴 🚴 🚴 🚴 🚴';
-        }
-        body.mobile-lite.tour-mode::after {
-            content: '🚴‍♂️ 🚴‍♀️ 🚴 🚴 🚴\A🚴 🚴‍♂️ 🚴‍♀️ 🚴';
-            opacity: 0.08;
-            font-size: 2.2rem;
-            transform: rotate(2deg);
+            display: none; /* Nascondi le animazioni CSS di fallback */
         }
 
         .random-bike {
@@ -998,30 +965,23 @@
             });
             updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
             
-            // Avvia sciame biciclette solo su desktop
-            if (!isMobileLite) {
-                if (!bikeSwarm) {
-                    const baseOptions = {
-                        initialCount: 14,
-                        maxBikes: 34,
-                        spawnMin: 280,
-                        spawnMax: 1300,
-                        baseSpeed: 8,
-                        jitterChance: 0.035,
-                        jitterMaxAngle: 0.35,
-                        trailEnabled: true,
-                        targetFPS: 60
-                    };
-                    bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
-                }
-                bikeSwarm.start();
-            } else {
-                if (bikeSwarm) {
-                    bikeSwarm.stop();
-                    bikeSwarm = null;
-                }
-                document.querySelectorAll('.bike, .bike-trail, .bike-emoji').forEach(el => el.remove());
+            // Avvia sciame biciclette (anche su mobile, ma ottimizzato)
+            if (!bikeSwarm) {
+                const isMobile = isMobileLite;
+                const baseOptions = {
+                    initialCount: isMobile ? 6 : 14,
+                    maxBikes: isMobile ? 12 : 34,
+                    spawnMin: isMobile ? 500 : 280,
+                    spawnMax: isMobile ? 2000 : 1300,
+                    baseSpeed: isMobile ? 10 : 8, // Più veloci su mobile come richiesto
+                    jitterChance: 0.035,
+                    jitterMaxAngle: 0.35,
+                    trailEnabled: !isMobile, // Disabilita scie su mobile per performance
+                    targetFPS: 60
+                };
+                bikeSwarm = new BikeSwarm(document.querySelector('.container'), baseOptions);
             }
+            bikeSwarm.start();
         }
         
         function toggleAutoSpin() {
