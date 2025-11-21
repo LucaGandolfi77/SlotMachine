@@ -1049,7 +1049,7 @@
 
         function updateMessage(text, type = '') {
             if (tourModeActive) {
-                const isTourStatus = text.includes('TOUR MODE');
+                const isTourStatus = text.includes('GIRO DEI BAR') || text.includes('giri rimanenti');
                 const isCritical = text.includes('Saldo insufficiente') || text.includes('Game Over');
                 if (!isTourStatus && !isCritical) {
                     return;
@@ -1429,7 +1429,7 @@
             
             if (tourModeActive) {
                 tourSpinsRemaining--;
-                updateMessage(`🚲 TOUR MODE: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
+                updateMessage(`🚲 GIRO DEI BAR: ${tourSpinsRemaining} giri rimanenti 🚴`, 'bonus-message');
                 if (tourSpinsRemaining === 0) {
                     tourModeActive = false;
                     document.body.classList.remove('tour-mode');
@@ -1444,7 +1444,7 @@
                     litSymbols.clear();
                     document.querySelectorAll('.clover-image, .bell-image, .cherry-image, .star-image, .target-image')
                         .forEach(img => img.classList.remove('symbol-highlight'));
-                    updateMessage('TOUR MODE completato! 🏁', 'win-message');
+                    updateMessage('GIRO DEI BAR completato! 🏁', 'win-message');
                 }
             }
             
