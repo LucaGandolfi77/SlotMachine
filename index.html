@@ -966,6 +966,13 @@
         }
 
         function updateMessage(text, type = '') {
+            if (tourModeActive) {
+                const isTourStatus = text.includes('TOUR MODE');
+                const isCritical = text.includes('Saldo insufficiente') || text.includes('Game Over');
+                if (!isTourStatus && !isCritical) {
+                    return;
+                }
+            }
             messageEl.textContent = text;
             messageEl.className = 'message ' + type;
         }
